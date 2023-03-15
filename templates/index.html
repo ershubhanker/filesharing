@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <title> Share files instantly </title>
-    
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//blueimp.github.io/jQuery-File-Upload/css/jquery.fileupload.css">
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
     <link href="{% static 'css/firstpage.css' %}" rel="stylesheet">
     <!-- <style type="text/css">
@@ -36,7 +37,7 @@
           <div>
             <label for="exampleInputFile">File input</label>
           </div>
-          <input type="file" class="form-control" id="exampleInp  utFile" name="file">
+          <input type="file" class="form-control" id="file" name="file">
           <div>
             <p> Select the file you wish to share </p>
           </div>
@@ -56,11 +57,33 @@
         </div>
         
         <button type="submit" class="btn btn-success"> Upload </button>
+        <script>
+          $(function() {
+              $('#file').fileupload({
+                  dataType: 'json',
+                  done: function (e, data) {
+                      alert("File uploaded successfully!");
+                  },
+                  progressall: function (e, data) {
+                      var progress = parseInt(data.loaded / data.total * 100, 10);
+                      $('#progress .progress-bar').css(
+                          'width',
+                          progress + '%'
+                      );
+                  }
+              });
+          });
+          </script>
       
       </form>
     </div> 
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="//blueimp.github.io/jQuery-File-Upload/js/vendor/jquery.ui.widget.js"></script>
+    <script src="//blueimp.github.io/jQuery-File-Upload/js/jquery.fileupload.js"></script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
   </body>
 </html>
