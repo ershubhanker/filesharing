@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Overpass:wght@500&display=swap');
+
+.center {
+    text-align: center;
+  }
+  .vertical-center {
+    min-height: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+  }
+  .large {
+    font-size: 60px;
+  }
+  .space {
+    margin-top: 2%;
+    margin-bottom: 2%;
+  }

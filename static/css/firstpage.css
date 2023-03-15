@@ -1,0 +1,25 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto:300);
+
+body{
+    background-color:#8fc4b7;
+}
+
+form{
+   
+    z-index: 1;
+    background: #FFFFFF;
+    max-width: 360px;
+    margin: 0 auto 100px;
+    padding: 45px;
+    text-align: left;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24); 
+    }
+
+
+    button{
+    text-align:center;
+    margin-left: 35%;
+    }
+    h1{
+        text-align:center;
+    }

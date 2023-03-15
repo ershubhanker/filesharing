@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title> Share files instantly </title>
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <!-- <link href="{% static 'css/secondpage.css' %}" rel="stylesheet"> -->
+    <style type="text/css">
+      body{
+        background-color:#8fc4b7;
+      }
+      .center {
+        text-align: left;
+        margin-left: 5%;
+      }
+      .vertical-center {
+        min-height: 20%;
+        min-height: 50vh;
+        display: flex;
+        align-items: center;
+      }
+      .p{
+        align-items: center;
+      }
+      /* .large {
+        font-size: 60px;
+      }
+      .space {
+        margin-top: 2%;
+        margin-bottom: 2%; */
+      
+      
+    </style>
+
+  </head>
+  <body>
+
+
+
+    <h1 class="center">Download Your File From the link given Below</h1>
+    
+ 
+    <div class="vertical-center"> 
+      <div class="container center">
+        <div class="row">
+          <div class="col-md-12 space">
+            <h1> Thank you for uploading: </h1>
+            <p> <b><u>{{self.file.url}}</u></b> <p>
+            <br>
+
+            <p> You can share the link below with anyone</p>
+            
+            <p><b>http://127.0.0.1:8000/{{download_url}}</b></p>
+            <a href="{{download_url}}"><button input type="button">Download your file</button></a>    
+          </div>
+          <div class = "col-md-12 space">
+            <a class="email-link" href="{% url 'email_csv' %}">email csv</a>
+          </div>
+
+          <div class="col-md-12 space">
+            <p> Click <a href="{% url 'upload' %}">here</a> to upload another file </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  </body>
+</html>

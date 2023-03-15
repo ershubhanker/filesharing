@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Overpass:wght@500&display=swap');
+
+body{
+    background-color: #c5f6fa;
+}
+
+.emailid{
+    text-align: left;
+}
+
+.topheading h1{
+    text-align: center;
+    font-family: 'Overpass', sans-serif;
+}
+
+.input-group input{
+    max-width: 60%;
+    
+}
