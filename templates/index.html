@@ -6,15 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <title> Share files instantly </title>
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="//blueimp.github.io/jQuery-File-Upload/css/jquery.fileupload.css">
+    
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
     <link href="{% static 'css/firstpage.css' %}" rel="stylesheet">
-    <!-- <style type="text/css">
-      .center {
-        text-align: center;
-      }
-    </style> -->
+    
     
   </head>
   <body>
@@ -34,17 +29,6 @@
 
         </div>
         <div class="form-group">
-          <div>
-            <label for="exampleInputFile">File input</label>
-          </div>
-          <input type="file" class="form-control" id="file" name="file">
-          <div>
-            <p> Select the file you wish to share </p>
-          </div>
-          
-        </div>
-
-        <div class="form-group">
           <label for="duration"> Set how long you want the file to be stored for </label>
           <select class="form-control" id="duration" name="duration">
             <option value="5m"> 5 Minutes </option>
@@ -55,35 +39,63 @@
           </select>
           <p class="help-block"> After this period, the file will be deleted from the server and the link no longer useable </p>
         </div>
+
+
+
+        <div class="form-group">
+          <div>
+            <label for="exampleInputFile">File input</label>
+          </div>
+          <p> Select the file you wish to share </p>
+          <input type="file" class="form-control" id="file" name="file" onchange="uploadFile()">
+         
+          <div>
+
+            <div id="feedback"></div>
+            <label id="progress-label" for="progress"></label>
+          <progress id="progress" value="0" max="100"></progress><br>
+          
+          </div>
+        </div>
+
+  
         
         <button type="submit" class="btn btn-success"> Upload </button>
-        <script>
-          $(function() {
-              $('#file').fileupload({
-                  dataType: 'json',
-                  done: function (e, data) {
-                      alert("File uploaded successfully!");
-                  },
-                  progressall: function (e, data) {
-                      var progress = parseInt(data.loaded / data.total * 100, 10);
-                      $('#progress .progress-bar').css(
-                          'width',
-                          progress + '%'
-                      );
-                  }
-              });
-          });
-          </script>
       
       </form>
     </div> 
-    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="//blueimp.github.io/jQuery-File-Upload/js/vendor/jquery.ui.widget.js"></script>
-    <script src="//blueimp.github.io/jQuery-File-Upload/js/jquery.fileupload.js"></script>
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script>
+      function ProgressBar(){
+        const fileUploader = document.getElementById('file');
+        const feedback = document.getElementById('feedback');
+        const progress = document.getElementById('progress');
 
+      const reader = new FileReader();
+
+      fileUploader.addEventListener('change', (event) => {
+      const files = event.target.files;
+      const file = files[0];
+      reader.readAsDataURL(file);
+  
+      reader.addEventListener('progress', (event) => {
+      if (event.loaded && event.total) {
+          const percent = (event.loaded / event.total) * 100;
+          progress.value = percent;
+          document.getElementById('progress-label').innerHTML = Math.round(percent) + '%';
+      
+      if (percent === 100) {
+        let msg = `<span style="color:green;">File <u><b>${file.name}</b></u> has been uploaded successfully.</span>`;
+        feedback.innerHTML = msg;
+      }
+    }
+    });
+  });
+
+      }
+      document.getElementById('file').addEventListener('click', ProgressBar);
+    </script>
+   
   </body>
 </html>

@@ -37,7 +37,7 @@ def upload_file(request):
             # print(d)
             newfile.duration = d
             newfile.expires_at = newfile.uploaded_at + d
-
+            #newfile=FileForm.objects.create(newfile=newfile)
             newfile.save()
 
             # Redirect to the file list after POST
