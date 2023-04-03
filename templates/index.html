@@ -13,11 +13,46 @@
     
   </head>
   <body>
-    <div class="container topheading">
+    <header>
+      <div class="container"> 
+         <nav class="navbar">
+        <a href="#" class="nav-branding">File sharing</a>
+            <ul class="nav-menu">
+               <li class="nav-item">
+                  <a href="#" class="nav-link">Home</a>
+               </li>
+               <li class="nav-item">
+                  <a href="#" class="nav-link">share another file</a>
+               </li>
+               <li class="nav-item">
+                  <a href="#" class="nav-link">Contact</a>
+               </li>
+               <li class="nav-item">
+               <div class="dropdown">
+                <button class="dropbtn">Dropdown</button>
+                <div class="dropdown-content">
+                  <a href="#">Link 1</a>
+                  <a href="#">Link 2</a>
+                  <a href="#">Link 3</a>
+                </div>
+              </div>
+            </li>
+            </ul> 
+           <div class="hamburger">
+               <span class="bar"></span>
+               <span class="bar"></span>
+               <span class="bar"></span>
+            </div>
+        </nav>
+      </div>
+   </header>
+
+  
+      <div class="container topheading">
       <h1>Share Files of Any Size</h1>
     </div>
 
-    <div class="container">
+  
       <form class="input-group d-flex justify-content-center" method="POST" action= {% url 'upload' %} enctype="multipart/form-data" id="upload_form">
       {% csrf_token %}
         <div class="form-group">
@@ -64,6 +99,7 @@
       
       </form>
     </div> 
+  </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script>
@@ -95,6 +131,17 @@
 
       }
       document.getElementById('file').addEventListener('click', ProgressBar);
+
+      const hamburger = document.querySelector(".hamburger");
+const navMenu = document.querySelector(".nav-menu");
+hamburger.addEventListener("click", () => {
+  hamburger.classList.toggle("active");
+  navMenu.classList.toggle("active");
+})
+document.querySelectorAll(".nav-link").forEach(n => n.addEventListener("click", () => {
+  hamburger.classList.remove("active");
+  navMenu.classList.remove("active");
+}))
     </script>
    
   </body>
