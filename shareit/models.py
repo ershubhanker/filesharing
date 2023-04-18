@@ -32,3 +32,10 @@ class File(models.Model):
             return "No attatchement"
 
     file_link.allow_tags = True
+
+
+class pdf_file(models.Model):
+        file = models.FileField(upload_to='pdf_file')
+
+class  docx_file(models.Model):
+        file =models.FileField(upload_to='docx_file')

@@ -24,10 +24,12 @@ urlpatterns = [
     #path(r'^', include(shareurls)),
     path('', views.index, name="index"),
     path('upload/', views.upload_file, name="upload"),
-    path('download/(?P<urltext>\w+)', views.serve_download_page, name="download"),
+    # path('download/(?P<urltext>\w+)', views.serve_download_page, name="download"),
     #path('delete/', views.deletefiles, name="delete"),
     path('admin_master/', admin.site.urls),
     path('email_csv', views.email_csv, name="email_csv"),
+    path('convert/', views.convert_pdf_to_word, name='convert_pdf_to_word'),
+    path('convertpdf/', views.convert_word_to_pdf, name='convert_word_to_pdf'),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF to Word Conversion</title>
+</head>
+<body>
+    <h1>Convert PDF to Word</h1>
+    <form action="{% url 'convert_pdf_to_word' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="pdf_file">PDF file:</label>
+        <input type="file" name="pdf_file"><br>
+        <input type="submit" value="Convert">
+    </form>
+</body>
+</html>
