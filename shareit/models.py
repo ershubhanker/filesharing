@@ -21,7 +21,7 @@ class File(models.Model):
     expires_at = models.DateTimeField(default=timezone.now() + timedelta(minutes=5))
 
     urlname = models.CharField(max_length=50, unique=True)
-    file = models.FileField(upload_to='files')
+    file = models.FileField(upload_to='upload')
     Email = models.CharField(max_length=30)
 
     def file_link(self):

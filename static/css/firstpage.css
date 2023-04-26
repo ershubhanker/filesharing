@@ -25,6 +25,10 @@ body{
     background-color:#8fc4b7;
 
   }
+ol, ul {
+    margin-top: 4px;
+    margin-bottom: 10px;
+}
 
 form{
     
@@ -287,7 +291,7 @@ a{
   align-items: center;
 }
 .nav-branding{
-  height: 1px;
+  height: -2px;
   font-size: 2rem;
 }
 .nav-menu{

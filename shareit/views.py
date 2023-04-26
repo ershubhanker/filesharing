@@ -1,6 +1,7 @@
 from configparser import ConverterMapping
 import datetime
 from lib2to3.pytree import convert
+from win32com import client
 import re
 import io
 import traceback
@@ -8,7 +9,7 @@ from xmlrpc.server import DocXMLRPCRequestHandler
 import comtypes.client
 import docx
 from fpdf import FPDF
-
+from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from shareit.models import pdf_file
 from shareit.models import  docx_file
@@ -42,26 +43,52 @@ def index(request):
     scheduler.add_job(delete_expired_files, 'interval', minutes=5)
 
     return render(request, 'index.html', {})
+# cwd = os.getcwd()
+
+# # Print the current working directory to the console for debugging purposes
+# print(cwd)
+
+# # Change the current working directory to the MEDIA_ROOT
+# os.chdir(settings.MEDIA_ROOT)
+
+# # Print the current working directory to the console for debugging purposes
+# print(os.getcwd())
 
 def upload_file(request):
-    # import pdb; pdb.set_trace()
-    new_file = None  # initialize new_file with a default value of None
-
+    # Handle file upload'
+    #import pdb;pdb.set_trace();
+    newfile = File()
     if request.method == 'POST':
         form = FileForm(request.POST, request.FILES)
         if form.is_valid():
-            new_file = File(file=request.FILES['file'])
-            new_file = form.save(commit=False)
-            duration = form.cleaned_data['duration']
-            expires_at = timezone.now() + get_duration(duration)
-            new_file.expires_at = expires_at
-            new_file.urlname = generate_string()
-            new_file.save()
-            # rest of the code
-            return redirect('file_detail', urltext=new_file.urlname)
+            newfile = File(file=request.FILES['file'])
+            newfile.name = request.FILES['file'].name
+            newfile.urlname = generate_string()
+            # print(newfile.name)
+            # print(newfile.urlname)
+            print('hello', newfile.file_link)
+            # file2= os.path.splitext(newfile.name)
+            # print(file2)
+            dur = request.POST['duration']
+            d = get_duration(dur) # returns the correct duration as a timedelta
+            # print(d)
+            newfile.duration = d
+            newfile.expires_at = newfile.uploaded_at + d
+            #newfile=FileForm.objects.create(newfile=newfile)
+            newfile.save()
 
-    form = FileForm()  # create an empty form
-    return render(request, 'yourfile.html', {'file': new_file, 'form': form})
+            # Redirect to the file list after POST
+            # return HttpResponseRedirect(reverse('upload'))
+    else:
+        form = FileForm()  # A empty, unbound form
+
+    return render(request,
+        'yourfile.html',
+        {'file': newfile, 'form': form, 'download_url': newfile.file_link}        
+    )
+
+    # form = FileForm()  # create an empty form
+    # return render(request, 'yourfile.html', {'file': new_file, 'form': form})
 
 def get_duration(duration):
     durations = {
@@ -152,18 +179,46 @@ def start_scheduler():
     # return response
 
 
-def download_file(request, urltext):
-    file_to_download = File.objects.get(urlname=urltext)
+# def download_file(request, urltext):
+#     file_to_download = File.objects.get(urlname=urltext)
 
-    if file_to_download is not None:
-        file_path = file_to_download.file.path
-        with open(file_path, 'rb') as f:
-            content_type = mimetypes.guess_type(file_path)[0]
-            response = FileResponse(f, content_type=content_type)
-            response['Content-Disposition'] = f'attachment; filename="{file_to_download.file.name}"'
-            return response
-    else:
-        return HttpResponseNotFound('Nothing here soz')
+#     if file_to_download is not None:
+#         file_path = file_to_download.file.path
+#         with open(file_path, 'rb') as f:
+#             content_type = mimetypes.guess_type(file_path)[0]
+#             response = FileResponse(f, content_type=content_type)
+#             response['Content-Disposition'] = f'attachment; filename="{file_to_download.file.name}"'
+#             return response
+#     else:
+#         return HttpResponseNotFound('Nothing here soz')
+def download_file(request, urlname):
+    # Retrieve the File object corresponding to the given URL name
+    file_to_download = get_object_or_404(File, urlname=urlname)
+
+    # Check if the file has expired (based on its expiration time)
+    if file_to_download.expires_at < timezone.now():
+        # Return an HTTP response indicating that the file has expired
+        return HttpResponse('This file has expired.')
+
+    # Get the full path to the file on the server's filesystem
+    file_path = f"{settings.MEDIA_ROOT}/{file_to_download.file.name}"
+
+    # Open the file and read its contents into a byte string
+    with open(file_path, 'rb') as f:
+        file_data = f.read()
+
+    # Create a Django FileResponse object to stream the file to the client
+    response = FileResponse(file_data)
+
+    # Set the Content-Type header based on the file's MIME type
+    content_type = file_to_download.file.content_type
+    response['Content-Type'] = content_type
+
+    # Set the Content-Disposition header to force a "Save As" dialog box
+    response['Content-Disposition'] = f'attachment; filename="{file_to_download.name}"'
+
+    # Return the FileResponse object
+    return response
     
 
 def convert_pdf_to_word(request):
@@ -186,18 +241,19 @@ def convert_pdf_to_word(request):
     
 
 def convert_word_to_pdf(request):
-    
     if request.method == 'POST':
-        # Assuming the uploaded file is a docx file
-        docx_file = request.FILES['docx_file']
-        # Set the destination file path for the PDF file
-        pdf_file_path = os.path.splitext(docx_file.name)[0] + '.pdf'
-        # Convert the docx file to pdf
-        convert(docx_file, pdf_file_path)
-        # Download the pdf file
-        with open(pdf_file_path, 'rb') as pdf:
-            response = HttpResponse(pdf.read(), content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename=' + pdf_file_path
+        word_file = request.FILES['word_file']
+        word_path = os.path.join('media', word_file.name)
+        with open(word_path, 'wb') as f:
+            f.write(word_file.read())
+        word = client.DispatchEx("Word.Application")
+        worddoc = word.Documents.Open(os.path.abspath(word_path))
+        pdf_path = os.path.join('media', f'{os.path.splitext(word_file.name)[0]}.pdf')
+        worddoc.SaveAs(pdf_path, FileFormat=17)
+        worddoc.Close()
+        word.Quit()
+        with open(pdf_path, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(pdf_path)}"'
             return response
     return render(request, 'converttopdf.html')
-
