@@ -1,18 +1,20 @@
 from configparser import ConverterMapping
-import datetime
+import tempfile
+from django.core.files.base import ContentFile
 from lib2to3.pytree import convert
-from win32com import client
-import re
+from apscheduler.schedulers.background import BackgroundScheduler
+import fitz
+from datetime import datetime, timedelta
 import io
-import traceback
-from xmlrpc.server import DocXMLRPCRequestHandler
-import comtypes.client
-import docx
 from fpdf import FPDF
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from shareit.models import pdf_file
+from shareit.models import  Document
 from shareit.models import  docx_file
+from docx2pdf import convert
+from pdf2image import convert_from_path
+# from .models import ConvertedFile
 import PyPDF2
 from django.shortcuts import get_object_or_404, render, redirect
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -22,14 +24,11 @@ from django.urls import reverse
 from django.utils import timezone
 # from filesharing.shareit.models import File
 from shareit.models import File
-from shareit.forms import FileForm
 
+from shareit.forms import FileForm, PDFUploadForm
 from datetime import timedelta
 from shareit.delete_expired_files import delete_expired_files
-import schedule
-import mimetypes
 from django.http import FileResponse
-import time
 import os
 import random, string
 import csv
@@ -37,26 +36,32 @@ from docx import Document
 # from .models import PDFFile, WordFile
 
 def index(request):
-    # Schedule the deletion of expired files to occur every hour
-    start_scheduler()
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(delete_expired_files, 'interval', minutes=5)
+    # Schedule the deletion of expired files to occur every hou
 
     return render(request, 'index.html', {})
-# cwd = os.getcwd()
 
-# # Print the current working directory to the console for debugging purposes
-# print(cwd)
+scheduler = BackgroundScheduler()
+scheduler.start()
 
-# # Change the current working directory to the MEDIA_ROOT
-# os.chdir(settings.MEDIA_ROOT)
+def delete_file(file_id):
+    # Delete the file with the given file_id
+    try:
+        file_obj = File.objects.get(id=file_id)
+        file_obj.delete()
+        print(f"Deleted file with id {file_id}")
+    except File.DoesNotExist:
+        print(f"File with id {file_id} does not exist")
 
-# # Print the current working directory to the console for debugging purposes
-# print(os.getcwd())
-
+def schedule_file_deletion(file_id, duration):
+    # Schedule the deletion of the file after the specified duration
+    duration = get_duration(duration)
+    if duration is not None:
+        deletion_time = datetime.now() + duration
+        scheduler.add_job(delete_file, 'date', run_date=deletion_time, args=[file_id])
+        print(f"Scheduled deletion of file with id {file_id} at {deletion_time}")
 def upload_file(request):
-    # Handle file upload'
-    #import pdb;pdb.set_trace();
+     # Handle file upload
+    #import pdb; pdb.set_trace()
     newfile = File()
     if request.method == 'POST':
         form = FileForm(request.POST, request.FILES)
@@ -64,21 +69,12 @@ def upload_file(request):
             newfile = File(file=request.FILES['file'])
             newfile.name = request.FILES['file'].name
             newfile.urlname = generate_string()
-            # print(newfile.name)
-            # print(newfile.urlname)
-            print('hello', newfile.file_link)
-            # file2= os.path.splitext(newfile.name)
-            # print(file2)
-            dur = request.POST['duration']
-            d = get_duration(dur) # returns the correct duration as a timedelta
-            # print(d)
-            newfile.duration = d
-            newfile.expires_at = newfile.uploaded_at + d
-            #newfile=FileForm.objects.create(newfile=newfile)
+            #print(newfile.file_link)
             newfile.save()
-
-            # Redirect to the file list after POST
-            # return HttpResponseRedirect(reverse('upload'))
+            print(newfile)
+            dur = request.POST['duration']
+            
+            schedule_file_deletion(newfile.id, dur)
     else:
         form = FileForm()  # A empty, unbound form
 
@@ -87,36 +83,22 @@ def upload_file(request):
         {'file': newfile, 'form': form, 'download_url': newfile.file_link}        
     )
 
-    # form = FileForm()  # create an empty form
-    # return render(request, 'yourfile.html', {'file': new_file, 'form': form})
-
-def get_duration(duration):
+def get_duration(dur):
     durations = {
-        '5m' : timedelta(minutes=5),
-        '1h' : timedelta(hours=1),
-        '6h' : timedelta(hours=6),
-        '24h' : timedelta(days=1),
-        '3d' : timedelta(days=3)
+    '5m' : timedelta(minutes=5),
+    '1h' : timedelta(hours=1),
+    '6h' : timedelta(hours=6),
+    '24h' : timedelta(days=1),
+    '3d' : timedelta(days=3)
     }
 
-    if duration in durations:
-        return durations[duration]
-    else:
-        # Return a default duration of 5 minutes
-        return timedelta(minutes=5)
+    return durations.get(dur, None)
 
 
 def generate_string():
     return ''.join(random.choice(string.ascii_uppercase) for _ in range(10))
  
-# def serve_download_page(request, urltext):
 
-#     file_to_download = File.objects.get(urlname=urltext)
-
-#     if file_to_download != None:
-#         return render(request,'yourfile.html', {'download' : file_to_download}, context_instance=RequestContext(request))
-#     else:
-#         return HttpResponseNotFound('Nothing here soz')
      
 
 def email_csv(request):
@@ -137,14 +119,7 @@ def email_csv(request):
 
 
 
-    
-def delete_expired_files():
-    import pdb;pdb.set_trace()
-    print("Deleting expired files...")
-    expired_files = File.objects.filter(expires_at__lte=timezone.now())
-    for file_path in expired_files:
-        print(f"Deleting expired file: {file_path}")
-        os.remove(file_path)
+
     
 
 
@@ -153,44 +128,7 @@ def start_scheduler():
     # Run the delete_expired_files function every hour
     scheduler.add_job(delete_expired_files, 'interval', minutes=5)
     scheduler.start()
-# def deletefiles(request):
-#      print("Hello world")
-#      delt = File.objects.all()
-#      delt.delete()
-#      return render(request,'delete.html')
 
-# def download_file(request, urltext):
-#     # Retrieve the File object corresponding to the given URL name
-#     file_to_download = get_object_or_404(File, urlname=urltext)
-
-#     # Check if the file has expired (based on its expiration time)
-#     if file_to_download.expires_at < timezone.now():
-#         # Return an HTTP response indicating that the file has expired
-#         return HttpResponse('This file has expired.')
-
-#     # Open the file and read its contents into a byte string
-#     with open(file_to_download.file.path, 'rb') as f:
-#         file_contents = f.read()
-#         response = HttpResponse(file_contents, content_type=file_to_download.content_type)
-#     response['Content-Disposition'] = f'attachment; filename="{file_to_download.name}"'
-#     response['Content-Length'] = len(file_contents)
-
-    # Return the response object
-    # return response
-
-
-# def download_file(request, urltext):
-#     file_to_download = File.objects.get(urlname=urltext)
-
-#     if file_to_download is not None:
-#         file_path = file_to_download.file.path
-#         with open(file_path, 'rb') as f:
-#             content_type = mimetypes.guess_type(file_path)[0]
-#             response = FileResponse(f, content_type=content_type)
-#             response['Content-Disposition'] = f'attachment; filename="{file_to_download.file.name}"'
-#             return response
-#     else:
-#         return HttpResponseNotFound('Nothing here soz')
 def download_file(request, urlname):
     # Retrieve the File object corresponding to the given URL name
     file_to_download = get_object_or_404(File, urlname=urlname)
@@ -241,19 +179,58 @@ def convert_pdf_to_word(request):
     
 
 def convert_word_to_pdf(request):
+    
     if request.method == 'POST':
         word_file = request.FILES['word_file']
-        word_path = os.path.join('media', word_file.name)
-        with open(word_path, 'wb') as f:
-            f.write(word_file.read())
-        word = client.DispatchEx("Word.Application")
-        worddoc = word.Documents.Open(os.path.abspath(word_path))
-        pdf_path = os.path.join('media', f'{os.path.splitext(word_file.name)[0]}.pdf')
-        worddoc.SaveAs(pdf_path, FileFormat=17)
-        worddoc.Close()
-        word.Quit()
-        with open(pdf_path, 'rb') as f:
+        pdf_file = io.BytesIO()
+        convert(word_file.file, pdf_file)
+         # Open the Word file using the python-docx library
+      
+        # Write the contents of the Word file to a PDF using the reportlab library
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(pdf_file.getbuffer())
+            temp_pdf_file = f.name
+            print(temp_pdf_file)
+        
+        # Send the PDF file as a response
+        with open(temp_pdf_file, 'rb') as f:
             response = HttpResponse(f.read(), content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(pdf_path)}"'
+            response['Content-Disposition'] = 'attachment; filename="converted_file.pdf"'
             return response
-    return render(request, 'converttopdf.html')
+    else:
+        return render(request, 'converttopdf.html')
+    
+
+def pdf_upload(request):
+    if request.method == 'POST':
+        pdf_file = request.FILES.get('pdf')
+        if not pdf_file:
+            return render(request, 'pdf_upload.html', {'error': 'Please select a PDF file'})
+        
+        # Save the uploaded PDF file to the media directory
+        with open(os.path.join(settings.PDF_MEDIA_ROOT, pdf_file.name), 'wb+') as destination:
+            for chunk in pdf_file.chunks():
+                destination.write(chunk)
+        
+        # Convert PDF to image
+        with tempfile.TemporaryDirectory() as temp_dir:
+            doc = fitz.open(os.path.join(settings.PDF_MEDIA_ROOT, pdf_file.name))
+            page = doc[0] # Convert only the first page to image
+            image_data = page.getPixmap(alpha=False).getPNGData()
+        
+        # Create a ContentFile object from the converted image data
+        image_file = ContentFile(image_data)
+        image_file.name = pdf_file.name.replace('.pdf', '.jpg')
+        
+        # Save the converted image file to the media directory
+        with open(os.path.join(settings.PDF_MEDIA_ROOT, image_file.name), 'wb+') as destination:
+            for chunk in image_file.chunks():
+                destination.write(chunk)
+        
+        # Generate a download response for the converted image file
+        with open(os.path.join(settings.PDF_MEDIA_ROOT, image_file.name), 'rb') as file:
+            response = HttpResponse(file.read(), content_type='image/png')
+            response['Content-Disposition'] = f'attachment; filename="{image_file.name}"'
+            return response
+    
+    return render(request, 'pdf_upload.html')

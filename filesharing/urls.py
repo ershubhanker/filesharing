@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf import settings
-from django.urls import include, path
+from django.urls import  path
 from django.conf.urls.static import static
 from django.contrib import admin
 from shareit import views
@@ -30,8 +30,14 @@ urlpatterns = [
     path('email_csv', views.email_csv, name="email_csv"),
     path('convert/', views.convert_pdf_to_word, name='convert_pdf_to_word'),
     path('convertpdf/', views.convert_word_to_pdf, name='convert_word_to_pdf'),
-]
+    path('pdf/upload/', views.pdf_upload, name='pdf_upload'),
+] 
+
+
+
+
 
 if settings.DEBUG:
+	urlpatterns += static(settings.PDF_MEDIA_URL, document_root=settings.PDF_MEDIA_ROOT)
 	urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 	urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

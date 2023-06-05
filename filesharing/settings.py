@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django_apscheduler",
     'rest_framework',
     'shareit',
+    
 ]
 
 MIDDLEWARE = [
@@ -65,6 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.media',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
@@ -73,6 +75,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'filesharing.wsgi.application'
 
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -128,3 +131,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/upload/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'upload')
+
+PDF_MEDIA_URL = '/pdf_media/'
+PDF_MEDIA_ROOT = os.path.join(BASE_DIR, 'pdf_media')

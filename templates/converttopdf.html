@@ -75,7 +75,7 @@ a {
     <form action="{% url 'convert_word_to_pdf' %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <label for="docx_file">word file:</label>
-        <input type="file" name="docx_file"><br>
+        <input type="file" name="word_file"><br>
         <button id="convert-btn">Convert</button>
     </form>
     </div>
